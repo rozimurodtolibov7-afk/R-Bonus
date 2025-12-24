@@ -3,155 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-REBORN</title>
+    <title>R-Bonus: Cyber Collector</title>
     <style>
-        :root { --reborn: #00f3ff; --bg: #050508; }
-        body { margin: 0; overflow: hidden; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; touch-action: none; }
-        
-        #hud { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.8); padding: 10px 20px; border: 1px solid var(--reborn); border-radius: 5px; box-shadow: 0 0 15px var(--reborn); }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
-        button { padding: 15px 50px; font-size: 22px; background: var(--reborn); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 30px; box-shadow: 0 0 30px var(--reborn); }
-        
-        #flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 999; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #game-ui { position: absolute; top: 20px; font-size: 28px; color: #00ffaa; text-shadow: 0 0 15px #00ffaa; z-index: 10; }
+        canvas { background: #050505; border-top: 5px solid #00ffaa; border-bottom: 5px solid #00ffaa; box-shadow: 0 0 50px rgba(0, 255, 170, 0.1); }
+        .tap-msg { position: absolute; bottom: 40px; color: #444; font-size: 14px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div id="flash"></div>
-
-<div id="hud">
-    <div class="stat">FORM: <span id="form-name">Cell</span></div>
-    <div class="stat">DNA: <span id="dna">0</span> / 10</div>
-</div>
-
-<div id="start-screen" class="overlay">
-    <h1 style="color: var(--reborn); font-size: 50px; margin:0;">R-REBORN</h1>
-    <p>COLLECT ENERGY TO EVOLVE</p>
-    <p>Move your finger to guide the soul.</p>
-    <button onclick="startGame()">EVOLVE</button>
-</div>
-
+<div id="game-ui">BONUS: <span id="score">0</span></div>
 <canvas id="gameCanvas"></canvas>
+<div class="tap-msg">TAP TO SWITCH GRAVITY</div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let gameActive = false, dna = 0, stage = 1;
-    let particles = [], energy = [];
-    const player = { x: 0, y: 0, size: 20 };
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+canvas.width = window.innerWidth > 400 ? 400 : window.innerWidth;
+canvas.height = 400;
 
-    // --- INFINITE EVOLVING MUSIC ---
-    function playInfiniteMusic() {
-        if (!gameActive) return;
-        const now = audioCtx.currentTime;
+let score = 0, gameActive = true, musicStarted = false;
+const player = { x: 50, y: 360, w: 35, h: 35, targetY: 360, color: '#00ffaa' };
+let items = [];
 
-        // Bass Pulse (Grows with Stage)
-        const bass = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        bass.type = (stage === 1) ? 'sine' : 'sawtooth';
-        bass.frequency.setValueAtTime(50 + (stage * 10), now);
-        g.gain.setValueAtTime(0.05 * stage, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        bass.connect(g); g.connect(audioCtx.destination);
-        bass.start(); bass.stop(now + 0.5);
-
-        // Synth Melody
-        if (stage >= 2) {
-            const synth = audioCtx.createOscillator();
-            const sg = audioCtx.createGain();
-            synth.frequency.setValueAtTime(220 * stage, now);
-            sg.gain.setValueAtTime(0.02, now);
-            sg.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-            synth.connect(sg); sg.connect(audioCtx.destination);
-            synth.start(); synth.stop(now + 0.2);
-        }
-
-        setTimeout(playInfiniteMusic, 500);
-    }
-
-    function startGame() {
-        document.getElementById('start-screen').style.display = 'none';
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        player.x = canvas.width / 2;
-        player.y = canvas.height / 2;
-        gameActive = true;
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        playInfiniteMusic();
-        spawnEnergy();
-        update();
-    }
-
-    function spawnEnergy() {
+// High-Energy Synth Music
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSynthDrive() {
+    if (musicStarted) return; musicStarted = true;
+    setInterval(() => {
         if(!gameActive) return;
-        energy.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            r: 5
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        const notes = [110, 130, 146, 110, 164, 110];
+        osc.frequency.setValueAtTime(notes[Math.floor(Date.now()/200)%6], audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }, 200);
+}
+
+// Gravity Switch Logic
+const switchGravity = () => {
+    playSynthDrive();
+    if (player.targetY === 360) player.targetY = 5;
+    else player.targetY = 360;
+};
+
+window.addEventListener('mousedown', switchGravity);
+window.addEventListener('touchstart', (e) => { e.preventDefault(); switchGravity(); });
+
+function spawnItem() {
+    if (Math.random() < 0.04) {
+        const type = Math.random() > 0.3 ? 'bonus' : 'trap';
+        items.push({
+            x: canvas.width + 50,
+            y: Math.random() * (canvas.height - 100) + 50,
+            w: 20, h: 20,
+            type: type,
+            speed: 4 + Math.random() * 3
         });
-        setTimeout(spawnEnergy, 1000 / stage);
     }
+}
 
-    window.onpointermove = (e) => {
-        player.x = e.clientX;
-        player.y = e.clientY;
-    };
+function update() {
+    if (!gameActive) return;
 
-    function reborn() {
-        stage++;
-        dna = 0;
-        document.getElementById('flash').style.opacity = 1;
-        setTimeout(() => document.getElementById('flash').style.opacity = 0, 500);
-        
-        const names = ["Cell", "Core", "Virus", "Master", "God"];
-        document.getElementById('form-name').innerText = names[stage-1] || "Eternal";
-        document.getElementById('dna').innerText = "0";
-    }
+    // Smooth Gravity Slide
+    player.y += (player.targetY - player.y) * 0.2;
 
-    function update() {
-        if(!gameActive) return;
-        ctx.fillStyle = 'rgba(5, 5, 8, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    items.forEach((item, i) => {
+        item.x -= item.speed;
 
-        // Draw Player based on Stage (REBORN EFFECT)
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = varColor();
-        ctx.fillStyle = varColor();
-        
-        ctx.beginPath();
-        if (stage === 1) ctx.arc(player.x, player.y, 15, 0, Math.PI*2);
-        else if (stage === 2) ctx.rect(player.x-15, player.y-15, 30, 30);
-        else {
-            ctx.moveTo(player.x, player.y - 20);
-            ctx.lineTo(player.x - 20, player.y + 20);
-            ctx.lineTo(player.x + 20, player.y + 20);
-        }
-        ctx.fill();
-
-        // Energy Collection
-        energy.forEach((e, i) => {
-            ctx.fillStyle = "white";
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill();
-
-            if(Math.hypot(player.x - e.x, player.y - e.y) < 30) {
-                energy.splice(i, 1);
-                dna++;
-                document.getElementById('dna').innerText = dna;
-                if(dna >= 10) reborn();
+        // Collision detection
+        if (player.x < item.x + item.w && player.x + player.w > item.x &&
+            player.y < item.y + item.h && player.y + player.h > item.y) {
+            
+            if (item.type === 'bonus') {
+                score += 10;
+                scoreEl.innerText = score;
+                items.splice(i, 1);
+                createPulse();
+            } else {
+                gameOver();
             }
-        });
+        }
 
-        requestAnimationFrame(update);
+        if (item.x < -50) items.splice(i, 1);
+    });
+}
+
+let pulse = 0;
+function createPulse() { pulse = 15; }
+
+function draw() {
+    // Cyber Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Pulse effect on background
+    if (pulse > 0) {
+        ctx.strokeStyle = `rgba(0, 255, 170, ${pulse/15})`;
+        ctx.lineWidth = pulse;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        pulse--;
     }
 
-    function varColor() {
-        const colors = ["#00f3ff", "#ff00ff", "#ffff00", "#00ff00", "#ff0000"];
-        return colors[(stage-1) % 5];
-    }
+    // Grid lines for style
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+    for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,400); ctx.stroke(); }
+
+    // Player
+    ctx.shadowBlur = 15; ctx.shadowColor = player.color;
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+
+    // Items
+    items.forEach(item => {
+        if (item.type === 'bonus') {
+            ctx.fillStyle = '#ffdd00'; ctx.shadowColor = '#ffdd00';
+            ctx.beginPath(); ctx.arc(item.x + 10, item.y + 10, 8, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055';
+            ctx.fillRect(item.x, item.y, 20, 20);
+        }
+    });
+
+    ctx.shadowBlur = 0;
+    update();
+    spawnItem();
+    requestAnimationFrame(draw);
+}
+
+function gameOver() {
+    gameActive = false;
+    alert("SYSTEM OVERLOAD! Final Bonus: " + score);
+    location.reload();
+}
+
+draw();
 </script>
 </body>
 </html>
