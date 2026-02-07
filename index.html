@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bonus</title>
+    <title>Bonus - Sodda Versiya</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -19,7 +19,7 @@
             touch-action: none;
         }
         
-        #main-menu, #shop-menu { 
+        #menu { 
             position: absolute; 
             z-index: 100; 
             background: rgba(0, 0, 0, 0.95); 
@@ -32,17 +32,24 @@
             width: 400px;
         }
         
-        .menu-title { 
-            font-size: 32px; 
+        .title { 
+            font-size: 36px; 
             color: #00ffaa; 
             text-shadow: 0 0 20px #00ffaa;
             margin-bottom: 20px;
-            animation: glow 2s infinite;
         }
         
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 20px #00ffaa; }
-            50% { text-shadow: 0 0 35px #00ffaa, 0 0 50px #00ffaa; }
+        .stats {
+            background: rgba(0, 100, 150, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid #0088cc;
+            font-size: 18px;
+        }
+        
+        .stat-row {
+            margin: 10px 0;
         }
         
         .btn {
@@ -50,7 +57,7 @@
             border: none;
             color: #000;
             padding: 15px 30px;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
@@ -65,29 +72,6 @@
             box-shadow: 0 0 25px rgba(0, 255, 170, 0.8);
         }
         
-        .btn-secondary {
-            background: linear-gradient(135deg, #444 0%, #222 100%);
-            color: #00ffaa;
-        }
-        
-        .stats {
-            background: rgba(0, 100, 150, 0.3);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border: 2px solid #0088cc;
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-size: 16px;
-        }
-        
-        .stat-label { color: #aaa; }
-        .stat-value { color: #00ffaa; font-weight: bold; }
-        
         #game-ui { 
             position: absolute; 
             top: 15px; 
@@ -95,12 +79,12 @@
             right: 15px;
             display: flex;
             justify-content: space-between;
-            font-size: 20px; 
+            font-size: 22px; 
             color: #00ffaa; 
             text-shadow: 0 0 15px #00ffaa; 
             z-index: 10;
             background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
+            padding: 15px;
             border-radius: 10px;
         }
         
@@ -115,378 +99,185 @@
             position: absolute; 
             bottom: 30px; 
             color: #00ffaa; 
-            font-size: 16px; 
+            font-size: 18px; 
             animation: blink 1.5s infinite;
             background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
+            padding: 12px 25px;
             border-radius: 20px;
         }
         
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        
-        .shop-item {
-            background: rgba(0, 50, 100, 0.4);
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border: 2px solid #0088cc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .shop-item.owned { border-color: #00ffaa; background: rgba(0, 100, 50, 0.3); }
-        
-        .item-info { text-align: left; flex: 1; }
-        .item-name { font-size: 18px; color: #00ffaa; margin-bottom: 5px; }
-        .item-desc { font-size: 12px; color: #aaa; }
-        .item-price { font-size: 16px; color: #ffdd00; font-weight: bold; }
-        
-        .btn-buy {
-            background: #ffdd00;
-            color: #000;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .btn-buy:disabled {
-            background: #555;
-            color: #888;
-            cursor: not-allowed;
+        @keyframes blink { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.3; } 
         }
         
         .hidden { display: none !important; }
-        
-        #pause-btn {
-            position: absolute;
-            top: 80px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ffaa;
-            color: #00ffaa;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            z-index: 10;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
 
-<!-- Main Menu -->
-<div id="main-menu">
-    <div class="menu-title">🎮 BONUS</div>
+<!-- Menu -->
+<div id="menu">
+    <div class="title">🎮 BONUS</div>
     <div class="stats">
-        <div class="stat-row">
-            <span class="stat-label">💰 Umumiy Coins:</span>
-            <span class="stat-value" id="total-coins">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">🏆 Eng Yuqori:</span>
-            <span class="stat-value" id="high-score">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">👥 Referallar:</span>
-            <span class="stat-value" id="referral-count">0</span>
-        </div>
+        <div class="stat-row">💰 Coins: <span id="total-coins">0</span></div>
+        <div class="stat-row">🏆 Rekord: <span id="high-score">0</span></div>
     </div>
-    <button class="btn" onclick="startGame()">▶ O'YINNI BOSHLASH</button>
-    <button class="btn" onclick="showShop()">🛒 DO'KON</button>
-    <button class="btn" onclick="shareReferralDirect()">👥 DO'STLARGA ULASHISH</button>
-</div>
-
-<!-- Shop Menu -->
-<div id="shop-menu" class="hidden">
-    <div class="menu-title">🛒 DO'KON</div>
-    <div class="stats">
-        <div class="stat-row">
-            <span class="stat-label">💰 Sizning Coins:</span>
-            <span class="stat-value" id="shop-coins">0</span>
-        </div>
-    </div>
-    <div id="shop-items"></div>
-    <button class="btn btn-secondary" onclick="closeShop()">◀ ORQAGA</button>
+    <button class="btn" onclick="startGame()">▶ BOSHLASH</button>
 </div>
 
 <!-- Game UI -->
 <div id="game-ui" class="hidden">
-    <div>
-        <span>💰 <span id="score">0</span></span>
-    </div>
-    <div>
-        <span>⚡ Tezlik: <span id="speed-level">1</span>x</span>
-    </div>
+    <div>💰 <span id="score">0</span></div>
+    <div>❤️ <span id="lives">3</span></div>
 </div>
-<button id="pause-btn" class="hidden" onclick="togglePause()">⏸ PAUZA</button>
+
 <canvas id="gameCanvas" class="hidden"></canvas>
-<div class="tap-msg hidden" id="tap-msg">⬆️⬇️ GRAVITATSIYANI O'ZGARTIRISH UCHUN BOSING</div>
+<div class="tap-msg hidden" id="tap-msg">⬆️⬇️ BOSING</div>
 
 <script>
-// Game State
-let gameState = {
-    totalCoins: parseInt(localStorage.getItem('totalCoins')) || 0,
-    highScore: parseInt(localStorage.getItem('highScore')) || 0,
-    referralCount: parseInt(localStorage.getItem('referralCount')) || 0,
-    ownedItems: JSON.parse(localStorage.getItem('ownedItems')) || [],
-    currentSkin: localStorage.getItem('currentSkin') || '#00ff00',
-    speedMultiplier: parseFloat(localStorage.getItem('speedMultiplier')) || 1,
-    shieldActive: false
-};
+// O'yin holati
+let totalCoins = parseInt(localStorage.getItem('totalCoins')) || 0;
+let highScore = parseInt(localStorage.getItem('highScore')) || 0;
 
-// Shop Items
-const shopItems = [
-    { id: 'skin1', name: 'Qizil Neon', desc: 'Qizil rangdagi skin', price: 100, type: 'skin', value: '#ff0055' },
-    { id: 'skin2', name: 'Oltin Yulduz', desc: 'Oltin rangdagi skin', price: 200, type: 'skin', value: '#ffdd00' },
-    { id: 'skin3', name: 'Moviy Elektr', desc: 'Moviy rangdagi skin', price: 150, type: 'skin', value: '#00aaff' },
-    { id: 'skin4', name: 'Yashil Klassik', desc: 'Yashil rangdagi skin', price: 50, type: 'skin', value: '#00ff00' },
-    { id: 'speed1', name: 'Tezlik +20%', desc: 'O\'yin tezligini oshiradi', price: 300, type: 'upgrade', value: 0.2 },
-    { id: 'shield', name: 'Bitta Himoya', desc: '1 marotaba xatoga bardosh beradi', price: 500, type: 'powerup', value: 'shield' }
-];
-
-// Canvas Setup
+// Canvas
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = Math.min(window.innerWidth - 20, 400);
 canvas.height = 400;
 
-let score = 0, gameActive = false, gamePaused = false, musicStarted = false;
-let speedLevel = 1;
-const player = { x: 50, y: 360, w: 35, h: 35, targetY: 360, color: '#00ff00' };
+let score = 0;
+let lives = 3;
+let gameActive = false;
+
+const player = { 
+    x: 50, 
+    y: 360, 
+    w: 30, 
+    h: 30, 
+    targetY: 360, 
+    color: '#00ff00' 
+};
+
 let items = [];
 let particles = [];
-const scoreEl = document.getElementById('score');
 
-// Initialize
-updateMainMenuStats();
-renderShop();
+// Menyu yangilash
+updateMenu();
 
-function updateMainMenuStats() {
-    document.getElementById('total-coins').innerText = gameState.totalCoins;
-    document.getElementById('high-score').innerText = gameState.highScore;
-    document.getElementById('referral-count').innerText = gameState.referralCount;
+function updateMenu() {
+    document.getElementById('total-coins').innerText = totalCoins;
+    document.getElementById('high-score').innerText = highScore;
 }
 
-function saveGameState() {
-    localStorage.setItem('totalCoins', gameState.totalCoins);
-    localStorage.setItem('highScore', gameState.highScore);
-    localStorage.setItem('referralCount', gameState.referralCount);
-    localStorage.setItem('ownedItems', JSON.stringify(gameState.ownedItems));
-    localStorage.setItem('currentSkin', gameState.currentSkin);
-    localStorage.setItem('speedMultiplier', gameState.speedMultiplier);
+function saveGame() {
+    localStorage.setItem('totalCoins', totalCoins);
+    localStorage.setItem('highScore', highScore);
 }
 
 function startGame() {
-    document.getElementById('main-menu').classList.add('hidden');
+    // Menyuni yashirish
+    document.getElementById('menu').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
-    document.getElementById('pause-btn').classList.remove('hidden');
     canvas.classList.remove('hidden');
     document.getElementById('tap-msg').classList.remove('hidden');
     
+    // O'yinni boshlash
     score = 0;
-    speedLevel = 1;
+    lives = 3;
     gameActive = true;
-    gamePaused = false;
     items = [];
     particles = [];
     player.y = 360;
     player.targetY = 360;
     
-    // Sotib olingan skin va upgradelarni qo'llash
-    player.color = gameState.currentSkin || '#00ff00';
-    
     document.getElementById('score').innerText = 0;
-    document.getElementById('speed-level').innerText = 1;
+    document.getElementById('lives').innerText = 3;
     
     draw();
 }
 
-function showShop() {
-    document.getElementById('main-menu').classList.add('hidden');
-    document.getElementById('shop-menu').classList.remove('hidden');
-    document.getElementById('shop-coins').innerText = gameState.totalCoins;
-    renderShop();
-}
-
-function closeShop() {
-    document.getElementById('shop-menu').classList.add('hidden');
-    document.getElementById('main-menu').classList.remove('hidden');
-    updateMainMenuStats();
-}
-
-function renderShop() {
-    const container = document.getElementById('shop-items');
-    container.innerHTML = '';
-    
-    shopItems.forEach(item => {
-        const owned = gameState.ownedItems.includes(item.id);
-        const div = document.createElement('div');
-        div.className = 'shop-item' + (owned ? ' owned' : '');
-        div.innerHTML = `
-            <div class="item-info">
-                <div class="item-name">${item.name}</div>
-                <div class="item-desc">${item.desc}</div>
-                <div class="item-price">${owned ? '✓ Sotib olingan' : item.price + ' coins'}</div>
-            </div>
-            ${owned ? '' : `<button class="btn-buy" onclick="buyItem('${item.id}')" ${gameState.totalCoins < item.price ? 'disabled' : ''}>SOTIB OLISH</button>`}
-        `;
-        container.appendChild(div);
-    });
-}
-
-function buyItem(itemId) {
-    const item = shopItems.find(i => i.id === itemId);
-    if (!item || gameState.totalCoins < item.price) return;
-    
-    gameState.totalCoins -= item.price;
-    gameState.ownedItems.push(itemId);
-    
-    if (item.type === 'skin') {
-        gameState.currentSkin = item.value;
-        player.color = item.value; // O'yinchining rangini darhol o'zgartirish
-    } else if (item.type === 'upgrade') {
-        gameState.speedMultiplier += item.value;
-    } else if (item.type === 'powerup' && item.value === 'shield') {
-        gameState.shieldActive = true; // Shield faollashtirish
-    }
-    
-    saveGameState();
-    renderShop();
-    document.getElementById('shop-coins').innerText = gameState.totalCoins;
-    
-    alert(`✅ ${item.name} sotib olindi!`);
-}
-
-function shareReferralDirect() {
-    const referralLink = 'https://t.me/Rozimurod_AI_Bot';
-    const text = `🎮 Bonus o'yiniga qo'shiling!\n\n💰 Referal kod: CYBER2026\n🎁 50 coin bonus oling!`;
-    
-    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
-    
-    window.location.href = telegramUrl;
-    
-    setTimeout(() => {
-        gameState.referralCount++;
-        gameState.totalCoins += 50;
-        saveGameState();
-        updateMainMenuStats();
-    }, 1000);
-}
-
-function togglePause() {
-    gamePaused = !gamePaused;
-    document.getElementById('pause-btn').innerText = gamePaused ? '▶ DAVOM' : '⏸ PAUZA';
-}
-
-// Audio
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSynthDrive() {
-    if (musicStarted) return; 
-    musicStarted = true;
-    setInterval(() => {
-        if(!gameActive || gamePaused) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        const notes = [110, 130, 146, 110, 164, 110];
-        osc.frequency.setValueAtTime(notes[Math.floor(Date.now()/200)%6], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-    }, 200);
-}
-
-function playCollectSound() {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-}
-
-// Controls
-const switchGravity = () => {
-    if (!gameActive || gamePaused) return;
-    playSynthDrive();
+// Gravitatsiyani o'zgartirish
+function switchGravity() {
+    if (!gameActive) return;
     player.targetY = player.targetY === 360 ? 5 : 360;
-};
+}
 
 window.addEventListener('mousedown', switchGravity);
-window.addEventListener('touchstart', (e) => { e.preventDefault(); switchGravity(); });
+window.addEventListener('touchstart', (e) => { 
+    e.preventDefault(); 
+    switchGravity(); 
+});
 
+// Elementlar yaratish
 function spawnItem() {
-    if (Math.random() < 0.035) {
-        const type = Math.random() > 0.35 ? 'bonus' : 'trap';
+    if (Math.random() < 0.04) {
+        const type = Math.random() > 0.4 ? 'coin' : 'obstacle';
         items.push({
             x: canvas.width + 50,
-            y: Math.random() * (canvas.height - 120) + 60,
-            w: 20, h: 20,
+            y: Math.random() * (canvas.height - 100) + 50,
+            w: 20, 
+            h: 20,
             type: type,
-            speed: (3.5 + Math.random() * 2.5) * gameState.speedMultiplier
+            speed: 4 + Math.random() * 2
         });
     }
 }
 
+// Zarralar effekti
 function createParticles(x, y, color) {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) {
         particles.push({
             x: x,
             y: y,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
             life: 20,
             color: color
         });
     }
 }
 
+// O'yinni yangilash
 function update() {
-    if (!gameActive || gamePaused) return;
+    if (!gameActive) return;
 
-    player.y += (player.targetY - player.y) * 0.18;
+    // O'yinchini harakatlantirish
+    player.y += (player.targetY - player.y) * 0.15;
 
-    if (score > 0 && score % 50 === 0 && speedLevel < 5) {
-        speedLevel = Math.floor(score / 50) + 1;
-        document.getElementById('speed-level').innerText = speedLevel;
-    }
-
+    // Elementlarni harakatlantirish
     items.forEach((item, i) => {
         item.x -= item.speed;
 
-        if (player.x < item.x + item.w && player.x + player.w > item.x &&
-            player.y < item.y + item.h && player.y + player.h > item.y) {
+        // To'qnashuv tekshirish
+        if (player.x < item.x + item.w && 
+            player.x + player.w > item.x &&
+            player.y < item.y + item.h && 
+            player.y + player.h > item.y) {
             
-            if (item.type === 'bonus') {
+            if (item.type === 'coin') {
                 score += 1;
-                gameState.totalCoins += 1;
-                scoreEl.innerText = score;
+                totalCoins += 1;
+                document.getElementById('score').innerText = score;
                 items.splice(i, 1);
-                playCollectSound();
                 createParticles(item.x, item.y, '#ffdd00');
-                createPulse();
             } else {
-                if (gameState.shieldActive) {
-                    gameState.shieldActive = false;
-                    items.splice(i, 1);
-                    createParticles(item.x, item.y, '#00aaff');
-                } else {
+                lives--;
+                document.getElementById('lives').innerText = lives;
+                items.splice(i, 1);
+                createParticles(item.x, item.y, '#ff0055');
+                
+                if (lives <= 0) {
                     gameOver();
                 }
             }
         }
 
+        // Ekrandan chiqgan elementlarni o'chirish
         if (item.x < -50) items.splice(i, 1);
     });
 
+    // Zarralarni yangilash
     particles.forEach((p, i) => {
         p.x += p.vx;
         p.y += p.vy;
@@ -495,35 +286,25 @@ function update() {
     });
 }
 
-let pulse = 0;
-function createPulse() { pulse = 15; }
-
+// Chizish
 function draw() {
     if (!gameActive) return;
-    if (gamePaused) {
-        requestAnimationFrame(draw);
-        return;
-    }
 
-    ctx.fillStyle = 'rgba(5, 5, 5, 0.4)';
+    // Fon
+    ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (pulse > 0) {
-        ctx.strokeStyle = `rgba(0, 255, 170, ${pulse/20})`;
-        ctx.lineWidth = pulse/2;
-        ctx.strokeRect(5, 5, canvas.width-10, canvas.height-10);
-        pulse--;
-    }
-
+    // Grid
     ctx.strokeStyle = '#0a0a0a'; 
     ctx.lineWidth = 1;
-    for(let i=0; i<canvas.width; i+=30) { 
+    for(let i = 0; i < canvas.width; i += 30) { 
         ctx.beginPath(); 
-        ctx.moveTo(i,0); 
-        ctx.lineTo(i,canvas.height); 
+        ctx.moveTo(i, 0); 
+        ctx.lineTo(i, canvas.height); 
         ctx.stroke(); 
     }
 
+    // Zarralar
     particles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.life / 20;
@@ -531,60 +312,55 @@ function draw() {
     });
     ctx.globalAlpha = 1;
 
-    // Shield himoyasi ko'rsatkichi
+    // O'yinchi
     ctx.shadowBlur = 20; 
     ctx.shadowColor = player.color;
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.w, player.h);
-    
-    // Agar shield faol bo'lsa, qo'shimcha effekt
-    if (gameState.shieldActive) {
-        ctx.strokeStyle = '#00aaff';
-        ctx.lineWidth = 3;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#00aaff';
-        ctx.strokeRect(player.x - 3, player.y - 3, player.w + 6, player.h + 6);
-    }
+    ctx.shadowBlur = 0;
 
+    // Elementlar
     items.forEach(item => {
-        if (item.type === 'bonus') {
+        if (item.type === 'coin') {
             ctx.fillStyle = '#ffdd00'; 
+            ctx.shadowBlur = 15;
             ctx.shadowColor = '#ffdd00';
             ctx.beginPath(); 
-            ctx.arc(item.x + 10, item.y + 10, 9, 0, Math.PI*2); 
+            ctx.arc(item.x + 10, item.y + 10, 10, 0, Math.PI * 2); 
             ctx.fill();
         } else {
             ctx.fillStyle = '#ff0055'; 
+            ctx.shadowBlur = 15;
             ctx.shadowColor = '#ff0055';
             ctx.fillRect(item.x, item.y, 20, 20);
         }
     });
-
     ctx.shadowBlur = 0;
+
     update();
     spawnItem();
     requestAnimationFrame(draw);
 }
 
+// O'yin tugashi
 function gameOver() {
     gameActive = false;
     
-    if (score > gameState.highScore) {
-        gameState.highScore = score;
+    if (score > highScore) {
+        highScore = score;
     }
     
-    saveGameState();
+    saveGame();
     
     setTimeout(() => {
-        alert(`❌ YUTQAZDINGIZ!\n\n💰 Siz ${score} coin yig'dingiz!\n🏆 Eng yuqori: ${gameState.highScore}\n💎 Jami coins: ${gameState.totalCoins}`);
+        alert(`🎮 O'YIN TUGADI!\n\n💰 Siz ${score} coin yig'dingiz!\n🏆 Rekord: ${highScore}\n💎 Jami: ${totalCoins} coins`);
         
         document.getElementById('game-ui').classList.add('hidden');
-        document.getElementById('pause-btn').classList.add('hidden');
         canvas.classList.add('hidden');
         document.getElementById('tap-msg').classList.add('hidden');
-        document.getElementById('main-menu').classList.remove('hidden');
+        document.getElementById('menu').classList.remove('hidden');
         
-        updateMainMenuStats();
+        updateMenu();
     }, 100);
 }
 </script>
